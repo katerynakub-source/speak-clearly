@@ -53,7 +53,9 @@ h3{font-size:19px;margin:0 0 6px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .chk{display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:500;cursor:pointer;min-height:44px}
 .chk input{width:22px;height:22px;accent-color:var(--co)}
-.say{display:none}.has-tts .say{display:inline-flex}
+.say.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(92vw,460px);background:#12131a;color:#fff;padding:12px 16px;border-radius:12px;font-size:15px;box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:9;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
 .ph{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}
 .ph b{font-size:20px}.ph .ru{color:var(--mute)}.ph .ipa{color:var(--mute);font-size:15px;margin-left:6px}
 .ph .ex{margin:6px 0 2px;font-style:italic}.ph .when{font-size:14px;color:var(--mute)}
@@ -371,12 +373,43 @@ const full=n=>doneOf(n).length>=4;
 const curDay=()=>{for(let n=1;n<=30;n++)if(!full(n))return n;return 30};
 
 /* ---- speech out: Claude voice, else browser voice ---- */
-let tts=null;
-function say(text,rate){
-  if(tts){tts.speak(text,{language:"en",rate:rate||1}).catch(()=>{});return}
-  if(window.speechSynthesis){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=rate||1;speechSynthesis.speak(u)}catch(e){}}
+let tts=null,stopping=false,toastT=null;
+const SS=window.speechSynthesis||null;
+const GOOD=/samantha|alex|daniel|karen|moira|serena|tessa|ava|allison|susan|zoe|evan|nathan|google (us|uk) english|aria|jenny|guy|libby|sonia|ryan|natural/i;
+const NOVELTY=/albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|princess|deranged|hysterical|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley/i;
+let voices=[];
+function loadVoices(){try{voices=SS?SS.getVoices():[]}catch(e){voices=[]}}
+if(SS){loadVoices();try{SS.addEventListener("voiceschanged",loadVoices)}catch(e){SS.onvoiceschanged=loadVoices}}
+function pickVoice(){
+  const en=voices.filter(v=>/^en[-_]/i.test(v.lang)&&!NOVELTY.test(v.name));
+  return en.find(v=>GOOD.test(v.name)&&/US/i.test(v.lang))||en.find(v=>GOOD.test(v.name))||en.find(v=>/US/i.test(v.lang))||en[0]||null;
 }
-if(window.speechSynthesis)document.body.classList.add("has-tts");
+function toast(msg){let t=$("#toast");if(!t){t=document.createElement("div");t.id="toast";t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}
+  t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),4500)}
+function playing(b){document.querySelectorAll(".say.on").forEach(x=>{x.classList.remove("on");if(x.dataset.label)x.textContent=x.dataset.label});
+  if(b){b.dataset.label=b.dataset.label||b.textContent;b.classList.add("on");b.textContent="■ Stop"}}
+function stopSay(){stopping=true;try{tts&&tts.stop()}catch(e){}try{SS&&SS.cancel()}catch(e){}playing(null);setTimeout(()=>stopping=false,300)}
+function webSay(text,rate,b){
+  if(!SS||!window.SpeechSynthesisUtterance){toast("This browser can't read text aloud. Try Safari or Chrome.");return}
+  try{
+    if(SS.speaking||SS.pending)SS.cancel();
+    const u=new SpeechSynthesisUtterance(text),v=pickVoice();
+    if(v)u.voice=v;u.lang=v?v.lang:"en-US";u.rate=Math.min(1.5,Math.max(.5,rate||1));
+    let started=false;
+    u.onstart=()=>{started=true;playing(b)};
+    u.onend=()=>playing(null);
+    u.onerror=e=>{playing(null);if(e&&e.error!=="interrupted"&&e.error!=="canceled")toast("Couldn't play the sound. Check your volume and that silent mode is off.")};
+    playing(b);SS.resume();SS.speak(u);
+    setTimeout(()=>{if(!started&&!SS.speaking){playing(null);toast("No sound? Turn off silent mode (the switch on the side of an iPhone) and turn the volume up.")}},2500);
+  }catch(e){playing(null);toast("Couldn't play the sound in this browser.")}
+}
+function say(text,rate,b){
+  if(b&&b.classList.contains("on")){stopSay();return}
+  if(tts){playing(b);
+    tts.speak(text,{language:"en",rate:Math.min(1.5,Math.max(.7,rate||1))}).then(()=>playing(null),e=>{playing(null);if(stopping)return;
+      if(e&&e.code==="not_granted")tts=null;webSay(text,rate,b)});return}
+  webSay(text,rate,b);
+}
 
 /* ---- dictation ---- */
 let dict=null,listening=false;
@@ -552,7 +585,7 @@ function renderHead(){
 }
 function route(){
   const h=(location.hash||"#today").slice(1);const v=["today","plan","phrases","smalltalk","practice"].includes(h)?h:"today";
-  stopT();if(dict&&listening)dict.stop().catch(()=>{});
+  stopT();if(dict&&listening)dict.stop().catch(()=>{});if(document.querySelector(".say.on"))stopSay();
   document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+v));
   $("#view").innerHTML=v==="today"?vToday():v==="plan"?vPlan():v==="phrases"?vPhrases():v==="smalltalk"?vSmall():vPractice();
   if($("#tx"))bindSpeak();
@@ -569,7 +602,7 @@ document.addEventListener("click",e=>{
     try{if(!v.startsWith("SC1."))throw 0;const o=JSON.parse(decodeURIComponent(escape(atob(v.slice(4)))));if(typeof o!=="object"||!o.done)throw 0;
       S=fix({done:o.done||{},known:o.known||{},logs:Array.isArray(o.logs)?o.logs.slice(0,200):[],sel:+o.sel||0});persist();route();location.hash="#plan";const m=$("#pmsg");if(m)m.textContent="Progress imported ✓"}
     catch(x){$("#pmsg").textContent="That doesn't look like a progress code. Copy it again from the other device."}return}
-  if(t.dataset.say){say(t.dataset.say,+t.dataset.rate||1);return}
+  if(t.dataset.say){say(t.dataset.say,+t.dataset.rate||1,t);return}
   if(t.dataset.step!==undefined){const n=S.sel||curDay(),i=+t.dataset.step,a=new Set(doneOf(n));t.checked?a.add(i):a.delete(i);S.done[n]=[...a];S.sel=n;persist();t.closest(".step").classList.toggle("dn",t.checked);renderHead();return}
   if(t.id==="prev"||t.id==="next"){S.sel=(S.sel||curDay())+(t.id==="next"?1:-1);persist();route();scrollTo(0,0);return}
   if(t.dataset.day&&t.closest(".days")){S.sel=+t.dataset.day;persist();location.hash="#today";if(location.hash==="#today")route();scrollTo(0,0);return}
@@ -586,7 +619,7 @@ route();
 
 /* ---- capabilities: light up when available ---- */
 if(inClaude){
-  claude.use("tts").then(t=>{if(t){tts=t;document.body.classList.add("has-tts")}}).catch(()=>{});
+  claude.use("tts").then(t=>{if(t)tts=t}).catch(()=>{});
   claude.use("dictation").then(d=>{if(d){dict=d;onDict();const m=$("#mic");if(m){m.hidden=false;$("#micnote").textContent=MICNOTE}}}).catch(()=>{});
   Promise.all([claude.use("db"),claude.use("user")]).then(async([db,user])=>{
     if(!db||!user)return;const id=await user.id();if(!id)return;

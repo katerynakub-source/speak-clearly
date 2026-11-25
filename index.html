@@ -9,6 +9,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Speak Clearly">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -448,6 +451,7 @@ function browserDict(){
 }
 const inClaude=!!(window.claude&&claude.use);
 if(!inClaude){dict=browserDict();if(dict)onDict()}
+if(!inClaude&&"serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost")){try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}}
 
 /* ---- timer ---- */
 let T={len:60,left:60,id:null,start:0};

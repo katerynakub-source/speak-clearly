@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speak Clearly 30</title>
+<meta name="theme-color" content="#1f33b0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Speak Clearly">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: encouraging coach, short plain-English instructions; Russian only as translation help.
+   IDEA: a speech coach's daily practice card — one day, four steps, a stopwatch on the desk.
+   PICTURE: the working day card itself, with a large ring timer and a live transcript.
+   COLOUR and TYPE: cobalt field + white, coral accent for "speak now"; Onest (Cyrillic) 800/500.
+   LAYOUT: cobalt header with 30-cell progress strip, tabs, then one calm column of steps. */
+:root{color-scheme:light;--bg:#ffffff;--ink:#12131a;--mute:#5a5f73;--co:#2b45e0;--coDeep:#1f33b0;--on:#fff;--pan:#eef1ff;--line:#d9def5;--ac:#ff5a3c}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#0e1124;--ink:#eef0ff;--mute:#a3a9c9;--co:#7186ff;--coDeep:#1b2366;--pan:#181d3c;--line:#2a3160}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#0e1124;--ink:#eef0ff;--mute:#a3a9c9;--co:#7186ff;--coDeep:#1b2366;--pan:#181d3c;--line:#2a3160}
+html{background:#ffffff;background:var(--bg)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Onest,system-ui,sans-serif;overflow-x:clip}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+header{background:var(--coDeep);color:var(--on);padding:28px max(5vw,16px) 0}
+.hwrap,.wrap{max-width:980px;margin:0 auto}
+h1{font-size:clamp(32px,6vw,48px);line-height:1.05;margin:0;font-weight:800;text-wrap:balance}
+.sub{opacity:.85;margin:8px 0 18px;max-width:60ch}
+.strip{display:grid;grid-template-columns:repeat(30,minmax(0,1fr));gap:3px;margin-bottom:6px}
+.strip i{height:14px;border-radius:3px;background:rgba(255,255,255,.18)}
+.strip i.d{background:#fff}.strip i.p{background:rgba(255,255,255,.55)}.strip i.c{outline:2px solid var(--ac);outline-offset:1px}
+.stripnote{font-size:13px;opacity:.85;margin-bottom:14px}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav a{flex:none;color:var(--on);text-decoration:none;padding:12px 16px;border-radius:10px 10px 0 0;font-weight:500;opacity:.85}
+nav a.on{background:var(--bg);color:var(--ink);opacity:1}
+main{padding:24px max(5vw,16px) 64px}
+h2{font-size:28px;line-height:1.15;margin:0 0 6px;font-weight:800;text-wrap:balance}
+h3{font-size:19px;margin:0 0 6px}
+.meta{color:var(--mute);margin:0 0 18px}
+.step{border-top:1px solid var(--line);padding:20px 0;display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px}
+.num{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--pan);color:var(--co);font-weight:800}
+.step.dn .num{background:var(--co);color:#fff}
+.big{font-size:21px;line-height:1.45;font-weight:500;background:var(--pan);padding:14px 16px;border-radius:12px;margin:10px 0;white-space:pre-line}
+.btn{min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:500}
+.btn.pri{background:var(--co);border-color:var(--co);color:#fff}
+.btn.hot{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn[aria-pressed=true]{background:var(--co);color:#fff;border-color:var(--co)}
+.btn.sm{min-height:36px;padding:4px 12px;font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chk{display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:500;cursor:pointer;min-height:44px}
+.chk input{width:22px;height:22px;accent-color:var(--co)}
+.say{display:none}.has-tts .say{display:inline-flex}
+.ph{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}
+.ph b{font-size:20px}.ph .ru{color:var(--mute)}.ph .ipa{color:var(--mute);font-size:15px;margin-left:6px}
+.ph .ex{margin:6px 0 2px;font-style:italic}.ph .when{font-size:14px;color:var(--mute)}
+.tag{display:inline-block;font-size:13px;padding:1px 8px;border-radius:99px;background:var(--pan);color:var(--co);margin-left:6px;vertical-align:middle}
+.speak{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:start;margin-top:10px}
+.ring{position:relative;width:200px;height:200px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .t{position:absolute;inset:0;display:grid;place-items:center;font-size:40px;font-weight:800;font-variant-numeric:tabular-nums}
+.ring.run circle.fg{stroke:var(--ac)}
+textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);font-size:16px;resize:vertical}
+.partial{color:var(--mute);font-style:italic;min-height:1.5em;font-size:15px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.stats div{background:var(--pan);border-radius:10px;padding:8px 10px}
+.stats b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.stats span{font-size:13px;color:var(--mute)}
+.flags{font-size:14px;color:var(--mute)}.flags mark{background:none;color:var(--ac);font-weight:700}
+.check li{list-style:none;margin:4px 0}.check{padding:0}
+.week{margin:24px 0}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:10px}
+.days button{min-height:64px;border:1px solid var(--line);border-radius:12px;background:var(--bg);text-align:left;padding:8px 10px}
+.days button small{display:block;color:var(--mute);font-size:13px}
+.days button.d{background:var(--co);color:#fff;border-color:var(--co)}.days button.d small{color:#dfe4ff}
+.days button.p{border-color:var(--co);border-width:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.decks{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:12px 0}.decks .btn{flex:none}
+input[type=search],input.ans{min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--bg);width:100%;max-width:420px;font-size:16px}
+.plist .ph{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+.plist .ph.k{opacity:.6}
+.quiz{max-width:560px;border:2px solid var(--co);border-radius:16px;padding:22px;margin-top:12px}
+.quiz .q{font-size:24px;font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:15px;margin-top:10px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:14px;color:var(--mute)}
+.src a{color:var(--co)}
+.empty{color:var(--mute);padding:12px 0}
+.status{font-size:13px;color:var(--mute);margin-top:6px}
+.more{margin-top:12px}
+.flow{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin:18px 0}
+.flow a{display:block;text-decoration:none;color:inherit;background:var(--pan);border-radius:12px;padding:12px 14px;border-top:4px solid var(--co)}
+.flow a:nth-child(6),.flow a:nth-child(7){border-top-color:var(--ac)}
+.flow b{display:block}.flow span{font-size:14px;color:var(--mute)}
+.styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px}
+.sty{border:1px solid var(--line);border-radius:14px;padding:16px}.sty h3{margin:0 0 6px}.sty p{margin:6px 0;font-size:15px}.sty .note{margin:0;font-weight:700;color:var(--co)}
+.week{scroll-margin-top:16px}
+@media(max-width:600px){.speak{grid-template-columns:minmax(0,1fr)}.ring{margin:0 auto}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.step{grid-template-columns:minmax(0,1fr)}.num{width:34px;height:34px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px}.stack td{border:0;padding:2px 0;text-align:left}}
+@media(prefers-reduced-motion:no-preference){.ring circle.fg{transition:stroke-dashoffset .25s linear}}
+</style>
+</head>
+<body>
+<header><div class="hwrap">
+<h1>Speak Clearly: 30 Days</h1>
+<p class="sub">15 minutes a day: breathing, diction, real-life vocabulary and a short timed talk. Train the link from thought to speech.</p>
+<div class="strip" id="strip"></div>
+<div class="stripnote" id="stripnote"></div>
+<nav id="nav"><a href="#today">Today</a><a href="#plan">Plan</a><a href="#phrases">Vocabulary</a><a href="#smalltalk">Small Talk</a><a href="#practice">Practice</a></nav>
+</div></header>
+<main><div class="wrap" id="view"></div></main>
+
+<script>
+{
+/* item: [english, meaning, example, example translation, ipa, group, note] */
+const LIVE=[],PHRASAL=[];
+const ENG=[
+/* Meetings & alignment */
+["Let's get aligned on…","Давайте согласуем…","Before we commit to dates, let's get aligned on scope.","","","Meetings","Opening a meeting with a clear goal"],
+["The purpose of this meeting is to…","Цель этой встречи — …","The purpose of this meeting is to agree the test plan and owners.","","","Meetings","First sentence of any meeting"],
+["Let's park that","Давайте отложим этот вопрос","Good point — let's park that and come back to it after the risk review.","","","Meetings","Stop a side discussion politely"],
+["Take it offline","Обсудить отдельно, вне встречи","That's a detail for the two of you — can you take it offline?","","","Meetings","When two people go too deep"],
+["To recap…","Подведём итог…","To recap: design freeze on Friday, Anna owns the interface list.","","","Meetings","Close a discussion"],
+["Action items","Конкретные задачи с ответственными","Let's run through the action items and owners before we close.","","","Meetings","End of every meeting"],
+["Who owns this?","Кто за это отвечает?","Good — who owns this, and by when?","","","Meetings","Force accountability"],
+["Let's not boil the ocean","Не пытаться решить всё сразу","Let's not boil the ocean — fix the top three issues first.","","","Meetings","Narrow the scope of a discussion"],
+["Same page","Одинаковое понимание","Just to make sure we're on the same page: the deadline is the 15th, not the 30th.","","","Meetings","Check shared understanding"],
+["Circle back","Вернуться к вопросу позже","I'll circle back once I have the vendor's answer.","","","Meetings","Promise a follow-up"],
+/* Status & progress */
+["On track / off track","По графику / отстаём","Mechanical is on track; electrical is two weeks off track.","","","Status","Short status line"],
+["Behind schedule","С отставанием от графика","We're five days behind schedule on the civil works.","","","Status","State a delay plainly"],
+["Critical path","Критический путь","The transformer delivery is now on the critical path.","","","Status","What drives the end date"],
+["Bottleneck","Узкое место","Design review is the bottleneck — one reviewer for six packages.","","","Status","Name what slows the team"],
+["Slippage","Сдвиг сроков","Any slippage on procurement pushes commissioning by a month.","","","Status","Talk about schedule drift"],
+["Milestone","Ключевая веха","We hit the 60% design milestone yesterday.","","","Status","Report progress"],
+["Lead time","Срок поставки / изготовления","Valves have a 26-week lead time, so we order this month.","","","Status","Procurement planning"],
+["Float / slack","Резерв времени","That activity has ten days of float, so it's not urgent.","","","Status","Explain schedule buffer"],
+["Ramp up","Наращивать (ресурсы, темп)","We need to ramp up the team to eight engineers by March.","","","Status","Increase resources"],
+["Deliverable","Результат работы для сдачи","The deliverable is a signed-off calculation note, not a draft.","","","Status","Be exact about outputs"],
+["Bottom line","Главный вывод","Bottom line: we need two more weeks and one more engineer.","","","Status","Start an update with the conclusion"],
+/* Risks & issues */
+["Flag a risk","Обозначить риск","I want to flag a risk on the supplier's welding qualification.","","","Risks","Raise a concern early"],
+["Showstopper","Критичная проблема, блокирующая всё","Missing the permit is a showstopper — nothing starts without it.","","","Risks","Something that stops the project"],
+["Root cause","Первопричина","We fixed the symptom; we still don't know the root cause.","","","Risks","Push for real analysis"],
+["Mitigation plan","План снижения риска","What's the mitigation plan if the crane isn't available?","","","Risks","Ask for a plan B"],
+["Worst-case scenario","Худший сценарий","Worst-case scenario, we lose three weeks and re-test.","","","Risks","Frame the downside"],
+["Single point of failure","Единая точка отказа","Mark is a single point of failure — nobody else knows the control logic.","","","Risks","People or system risk"],
+["Knock-on effect","Цепная реакция, последствия","A late design has a knock-on effect on fabrication and site work.","","","Risks","Explain consequences"],
+["Escalate","Передать вопрос на уровень выше","If we don't get an answer by Thursday, I'll escalate to the client's PM.","","","Risks","Signal next step firmly"],
+["Red flag","Тревожный сигнал","Three revisions of the same drawing is a red flag.","","","Risks","Point out a warning sign"],
+["Contingency","Резерв на непредвиденное","We kept 10% contingency in the budget for exactly this.","","","Risks","Budget and schedule buffer"],
+/* Decisions & pushback */
+["I'd push back on that","Я бы с этим не согласился","I'd push back on that — the data doesn't support a two-week fix.","","","Decisions","Disagree professionally"],
+["That's a non-starter","Это неприемлемо, даже не обсуждается","Skipping the pressure test is a non-starter.","","","Decisions","A firm no"],
+["Trade-off","Компромисс между вариантами","It's a trade-off between cost and lead time.","","","Decisions","Explain a choice"],
+["Let's be clear about…","Давайте внесём ясность…","Let's be clear about what we can deliver by June.","","","Decisions","Set expectations sharply"],
+["Make the call","Принять решение","We have enough data — I'll make the call today.","","","Decisions","Take responsibility for a decision"],
+["Go / no-go decision","Решение «делать или нет»","The go/no-go decision for start-up is on Monday.","","","Decisions","Gate decisions"],
+["What's the business case?","Каково экономическое обоснование?","Nice idea — what's the business case?","","","Decisions","Challenge a proposal"],
+["The data says otherwise","Данные говорят об обратном","I hear you, but the data says otherwise.","","","Decisions","Counter an opinion with facts"],
+["Non-negotiable","Не обсуждается","Safety requirements are non-negotiable.","","","Decisions","Draw a red line"],
+["Low-hanging fruit","Лёгкие быстрые победы","Let's take the low-hanging fruit first: labelling and torque checks.","","","Decisions","Prioritise quick wins"],
+["Sign off on","Утвердить, подписать","Can you sign off on the revised layout by Friday?","","","Decisions","Ask for approval"],
+/* Scope, client & contract */
+["Scope creep","Неконтролируемое расширение объёма работ","Adding two pumps without a change order is scope creep.","","","Scope & client","Protect the scope"],
+["Change order / variation","Изменение к договору","We'll submit a change order for the extra testing.","","","Scope & client","Charge for extra work"],
+["Out of scope","Вне объёма работ","Site surveys are out of scope under this contract.","","","Scope & client","Refuse politely but firmly"],
+["Deliver on commitments","Выполнять обязательства","Our priority is to deliver on the commitments we already made.","","","Scope & client","Client relationship"],
+["Manage expectations","Управлять ожиданиями","We need to manage the client's expectations on the first delivery.","","","Scope & client","Before bad news"],
+["Under-promise and over-deliver","Обещать меньше, делать больше","I'd rather under-promise and over-deliver on this one.","","","Scope & client","Setting a safe commitment"],
+["Liquidated damages","Штрафные санкции по договору (LDs)","A two-week delay triggers liquidated damages.","","","Scope & client","Contract risk"],
+["Terms and conditions","Условия договора","Legal is still reviewing the terms and conditions.","","","Scope & client","Contract talk"],
+["Bid / no-bid","Решение участвовать в тендере или нет","Given the risk profile, I recommend a no-bid.","","","Scope & client","Tender decisions"],
+["Value engineering","Оптимизация стоимости без потери функций","Value engineering saved 8% on the steel structure.","","","Scope & client","Reduce cost smartly"],
+/* Technical & quality */
+["Design freeze","Заморозка проекта","After design freeze, every change needs approval.","","","Technical & quality","Control changes"],
+["Fit for purpose","Соответствует назначению","The solution is cheaper and still fit for purpose.","","","Technical & quality","Justify a technical choice"],
+["Within tolerance","В пределах допуска","All measurements are within tolerance.","","","Technical & quality","Report test results"],
+["Non-conformance","Несоответствие","QA raised a non-conformance on the weld inspection.","","","Technical & quality","Quality issues"],
+["Lessons learned","Извлечённые уроки","Let's capture the lessons learned before the team moves on.","","","Technical & quality","Project close-out"],
+["Sanity check","Быстрая проверка на здравый смысл","Can you do a quick sanity check on these load figures?","","","Technical & quality","Ask for a quick review"],
+["Robust","Надёжный, устойчивый","We need a robust solution, not a quick patch.","","","Technical & quality","Describe solution quality"],
+["Interface","Стык, взаимодействие систем / дисциплин","Most of our problems sit at the interface between mechanical and electrical.","","","Technical & quality","Multidisciplinary work"],
+["Redundancy","Резервирование","The cooling system has full redundancy.","","","Technical & quality","Safety and reliability"],
+["As-built","Исполнительная документация","We can't close the project without as-built drawings.","","","Technical & quality","Documentation"],
+["Compliance","Соответствие требованиям / нормам","The design is in full compliance with the code.","","","Technical & quality","Regulations and standards"],
+/* People & feedback */
+["Hold someone accountable","Спросить с кого-то за результат","I'll hold the team accountable for the dates they gave.","","","People","Accountability"],
+["Step up","Взять на себя больше ответственности","Anna stepped up when the lead engineer was off.","","","People","Recognise effort"],
+["Bandwidth","Ресурс, свободное время","I don't have the bandwidth to review this week.","","","People","Say no to workload"],
+["Raise the bar","Поднять планку","This report raises the bar for the whole team.","","","People","Praise high quality"],
+["Fall short","Не дотянуть до ожиданий","The draft falls short on the cost section.","","","People","Give direct feedback"],
+["Constructive feedback","Конструктивная обратная связь","Can I give you some constructive feedback on the presentation?","","","People","Open a feedback talk"],
+["Empower the team","Дать команде полномочия","I want to empower the team to make site decisions.","","","People","Leadership"],
+["Delegate","Делегировать","Delegate the routine checks and focus on the interfaces.","","","People","Managing workload"],
+["Buy-in","Поддержка, согласие участников","We need buy-in from operations before we change the procedure.","","","People","Get stakeholders on board"],
+["Hands-on","Практический, вовлечённый лично","She's a very hands-on manager — she's on site every week.","","","People","Describe a style"],
+/* Sharp, concise answers */
+["Short answer: …","Если коротко: …","Short answer: yes, but not before May.","","","Sharp answers","Answer first, explain after"],
+["Here's the deal","Ситуация такая","Here's the deal: we can hit the date if we drop the second test.","","","Sharp answers","Frank, direct framing"],
+["That's not on us","Это не наша зона ответственности","The delay is on the client's side — that's not on us.","","","Sharp answers","Defend your team calmly"],
+["Let me be blunt","Скажу прямо","Let me be blunt: this plan won't work.","","","Sharp answers","Very direct message"],
+["Point taken","Принято, понял вашу мысль","Point taken — we'll add the extra inspection.","","","Sharp answers","Accept criticism briefly"],
+["I'll come back to you by…","Я вернусь с ответом к …","I don't know yet — I'll come back to you by 3 p.m.","","","Sharp answers","Instead of guessing"],
+["Fair point, however…","Справедливо, однако…","Fair point, however the cost doubles.","","","Sharp answers","Agree, then disagree"],
+["The ask is…","Просьба / запрос такой…","The ask is simple: one more welder for two weeks.","","","Sharp answers","State your request clearly"],
+["Moving forward…","В дальнейшем…","Moving forward, every change goes through the change board.","","","Sharp answers","Set a new rule"],
+["Not at the expense of safety","Не в ущерб безопасности","We'll speed up, but not at the expense of safety.","","","Sharp answers","Hold a firm line"]];
+/* small talk: [english, russian, example, "", "", stage, note, context d=daily p=events b=both] */
+const ST=[
+["How's your day going so far?","Как проходит твой день?","","","","Open","Easy, friendly start","d"],
+["Have you been here before? Anything you'd recommend?","Ты здесь уже бывал(а)? Что посоветуешь?","","","","Open","Café, restaurant, new place","d"],
+["I love your jacket — where did you get it?","Классная куртка — где ты её купил(а)?","","","","Open","A sincere compliment + question","d"],
+["Crazy weather today, isn't it?","Сумасшедшая сегодня погода, да?","","","","Open","Safe shared topic","d"],
+["How do you know the host?","Откуда ты знаешь хозяина вечера?","","","","Open","Parties, weddings, dinners","b"],
+["Hi, I'm Anna. Mind if I join you?","Привет, я Анна. Не против, если я присоединюсь?","","","","Open","Coffee break, standing tables","p"],
+["What brings you to the forum?","Что привело вас на форум?","","","","Open","The best event opener","p"],
+["Which session has been most useful for you so far?","Какая сессия была для вас самой полезной?","","","","Open","Conference, between sessions","p"],
+["What did you think of the keynote?","Как вам основной доклад?","","","","Open","Shared experience","p"],
+["Are you speaking this year or just enjoying it?","Вы выступаете в этом году или просто слушаете?","","","","Open","Light and flattering","p"],
+["What's keeping you busy at work these days?","Чем вы сейчас заняты на работе?","","","","Open","Better than “What do you do?”","p"],
+["I see you're with a big name in energy. How's that going?","Вижу, вы из крупной энергетической компании. Как там дела?","","","","Open","Use the badge as a hook","p"],
+["What got you into that?","Как ты к этому пришёл / пришла?","","","","Keep it going","Follow-up to any answer","b"],
+["How did that come about?","Как так получилось?","","","","Keep it going","Invite the story","b"],
+["That sounds challenging — how did you handle it?","Звучит непросто — как ты справился(-ась)?","","","","Keep it going","Show empathy, then ask","b"],
+["Oh really? Tell me more.","Правда? Расскажи подробнее.","","","","Keep it going","Simple, warm encouragement","b"],
+["What was the best part?","Что было самым классным?","","","","Keep it going","Trips, events, projects","b"],
+["Same here! I had something similar last year…","У меня то же самое! У меня было похожее в прошлом году…","","","","Keep it going","Share a little back (50/50)","b"],
+["So what's next for you?","А какие у тебя дальше планы?","","","","Keep it going","Move the talk forward","b"],
+["What do you enjoy most about your work?","Что тебе больше всего нравится в работе?","","","","Go deeper","FORD: Occupation","b"],
+["What are you excited about right now?","Что тебя сейчас по-настоящему вдохновляет?","","","","Go deeper","FORD: Dreams","b"],
+["What do you do to switch off after work?","Как ты отключаешься после работы?","","","","Go deeper","FORD: Recreation","b"],
+["Are you from here originally?","Ты родом отсюда?","","","","Go deeper","FORD: Family / roots","b"],
+["What's a project you're really proud of?","Каким проектом ты по-настоящему гордишься?","","","","Go deeper","People love this question","p"],
+["What's the biggest challenge in your sector right now?","Какой сейчас главный вызов в вашей отрасли?","","","","Go deeper","Professional depth","p"],
+["We're working on something similar — maybe we could compare notes.","Мы работаем над похожим — может, обменяемся опытом?","","","","Go deeper","Turn small talk into business","p"],
+["Who else should I be talking to here?","С кем ещё мне стоит здесь познакомиться?","","","","Go deeper","Networking power question","p"],
+["Is there anything I can help you with or connect you to?","Могу я чем-то помочь или с кем-то вас познакомить?","","","","Go deeper","Give first — very memorable","p"],
+["Sorry to jump in — I couldn't help overhearing…","Простите, что вмешиваюсь, — случайно услышал(а)…","","","","Join & interrupt","Join a group conversation","b"],
+["Can I add one thing to that?","Можно я добавлю одну мысль?","","","","Join & interrupt","Interrupt smoothly in a meeting","b"],
+["Just to build on what you said…","Развивая вашу мысль…","","","","Join & interrupt","Enter without contradicting","b"],
+["Before we move on — one quick thought.","Пока мы не перешли дальше — одна короткая мысль.","","","","Join & interrupt","Take the floor politely","p"],
+["Anyway, I've been meaning to ask you…","Кстати, я давно хотел(а) тебя спросить…","","","","Join & interrupt","Rescue an awkward silence","b"],
+["Coming back to what you said about…","Возвращаясь к тому, что ты сказал(а) про…","","","","Join & interrupt","Restart a topic after a pause","b"],
+["I'd love to, but I can't make it this time.","С удовольствием бы, но в этот раз не получится.","","","","Say no, stay liked","Decline an invitation","b"],
+["Thanks for thinking of me — I'll pass for now.","Спасибо, что подумали обо мне, — пока откажусь.","","","","Say no, stay liked","Warm but clear no","b"],
+["I can't commit to that, but here's what I can do…","Это я не могу обещать, но вот что я могу сделать…","","","","Say no, stay liked","No + alternative","p"],
+["It's been great talking to you — I'll let you get back to the event.","Было здорово поговорить — не буду больше отвлекать.","","","","Exit","The classic graceful exit","p"],
+["I need to grab a coffee before the next session — great chatting!","Хочу взять кофе до следующей сессии — приятно было пообщаться!","","","","Exit","Exit with a reason","p"],
+["I promised to say hi to a colleague — let's stay in touch.","Обещал(а) поздороваться с коллегой — давай оставаться на связи.","","","","Exit","Leave without awkwardness","b"],
+["Let me introduce you to Mark — you two should talk.","Давай познакомлю тебя с Марком — вам стоит пообщаться.","","","","Exit","Exit by connecting people","b"],
+["Do you have a card? I'd love to follow up.","У вас есть визитка? Хотелось бы продолжить разговор.","","","","Exit","Set up the follow-up","p"],
+["Great meeting you at the forum yesterday.","Было приятно познакомиться вчера на форуме.","","","","Follow up","First line of the email or message","p"],
+["As promised, here's the article I mentioned.","Как и обещал(а), вот статья, о которой я говорил(а).","","","","Follow up","Deliver on a small promise","p"],
+["Would you be open to a short call next week?","Вы были бы открыты к короткому звонку на следующей неделе?","","","","Follow up","Move to a real meeting","p"],
+["Let's connect on LinkedIn.","Давайте добавимся в LinkedIn.","","","","Follow up","Before you part","p"]];
+const STAGES=[
+{s:"Open",h:"Comment on something you both see, then ask an easy question. Smile, say your name, use theirs."},
+{s:"Keep it going",h:"Ask two follow-ups before you change topic. Share a little back — aim for 50/50."},
+{s:"Go deeper",h:"FORD: Family, Occupation, Recreation, Dreams. At events, ask about challenges and give first."},
+{s:"Join & interrupt",h:"Join a group with a light apology and a link to what they said. Rescue silence with a callback."},
+{s:"Say no, stay liked",h:"Thank, decline clearly, offer an alternative if you can. No long excuses."},
+{s:"Exit",h:"Summarise warmly, give a reason, set up the next step. Leave while the energy is high."},
+{s:"Follow up",h:"Within 24 hours: where you met, one detail from the talk, one clear next step."}];
+const SIT={
+d:["You're waiting in a long queue at a coffee shop. The person behind you sighs.","You're at a friend's birthday dinner and sit next to someone you don't know.","A neighbour you've never spoken to holds the lift door for you.","You're on a hike and stop at the same viewpoint as another walker.","First day at a new gym class — the person next to you looks new too.","At a wedding, the host introduces you to their cousin and walks away."],
+p:["Coffee break at an energy forum. You're both waiting at the coffee machine.","You're at a standing table at a conference reception, alone. Two people are talking nearby.","After a panel, you want to speak to the speaker for one minute.","A networking lunch: you sit next to a client's procurement manager.","The session ended early and the person next to you checks their phone.","You need to leave a conversation to catch the next session — and get their contact."]};
+/* speaker styles: public-speaking techniques commonly observed in these speakers. General observations, not affiliated or endorsed. */
+const STYLES=[
+{n:"Steve Jobs",t:"One headline, rule of three",how:"Says the main message in one short sentence, groups ideas in threes, uses plain words and saves a small surprise for the end.",drill:"Describe your job in one headline sentence, then three short points: “It does three things: …, … and …”.",st:"At events: answer “What do you do?” with a one-line headline, not a job title."},
+{n:"Barack Obama",t:"Pauses and rhythm",how:"Uses deliberate pauses before key words, repeats a phrase at the start of sentences for rhythm, and links a personal story to a shared value.",drill:"Say three sentences that start the same way (“We need…, we need…, we need…”) with a full pause after each.",st:"Slow down your first sentence and pause after their name — it signals calm confidence."},
+{n:"Oprah Winfrey",t:"Curious questions, deep listening",how:"Asks open questions, listens fully, reflects feelings back (“That must have felt…”), and makes the other person the star.",drill:"Ask one open question, then reflect the answer in one sentence before your next question.",st:"Use “What was that like for you?” — it turns small talk into real connection."},
+{n:"Tony Robbins",t:"Energy and vocal variety",how:"Big changes in volume, pace and pitch, strong posture, and questions that shift people into action.",drill:"Read one sentence three ways: quiet and slow, normal, then loud and fast. Notice what sounds most convincing.",st:"Match the other person's energy at the start, then lift it slightly."},
+{n:"Matthew McConaughey",t:"Unhurried storytelling",how:"Speaks slowly with warmth, uses specific sensory details and lets stories breathe without rushing to the point.",drill:"Tell a 30-second story about your morning with three concrete details (a sound, a colour, a smell).",st:"Answer “How was your weekend?” with one small, vivid story instead of “Fine”."},
+{n:"Tim Ferriss",t:"Precise follow-up questions",how:"Deconstructs answers with specific questions: what exactly, how often, what would you do differently.",drill:"Take any answer and ask “What did that look like in practice?” and “What would you do differently?”.",st:"At forums: ask “What's one thing that surprised you this year?” — people remember sharp questions."},
+{n:"Brené Brown",t:"Honest vulnerability",how:"Opens with a short, honest, sometimes self-deprecating story, then makes a point everyone can relate to.",drill:"Tell a 20-second story about a small mistake and what it taught you.",st:"A light “I'm terrible with names — remind me yours?” instantly lowers tension."},
+{n:"Morgan Freeman",t:"Low, slow, resonant voice",how:"Speaks in a calm low register with few words and long pauses, so every word carries weight.",drill:"Hum “mmm” to find your natural low pitch, then say “Let me tell you what happened” slowly, from the chest.",st:"Lower your pitch slightly and slow down when you introduce yourself."},
+{n:"Mel Robbins",t:"Direct, practical, action now",how:"Short sentences, a clear practical tip and a push to act within seconds instead of overthinking.",drill:"Count 5-4-3-2-1 in your head and start talking to the camera or mirror on “1” with your opener.",st:"See someone you want to meet? Count down and walk over before doubt kicks in."}];
+const V={slang:[],native:[],beautiful:[]};
+const DECKS=[
+{id:"live",t:"50 Live Phrases",src:"English Lavka — 50 phrases natives say right now",items:LIVE},
+{id:"eng",t:"Engineering Management",src:"Sharp professional expressions for engineering managers: meetings, status, risks, decisions, scope, quality, people",items:ENG},
+{id:"st",t:"Small Talk",src:"Openers, follow-ups, exits and follow-ups for daily life and professional events",items:ST},
+{id:"slang",t:"American Slang 2026",src:"English Lavka — 50 popular American slang words",items:V.slang},
+{id:"native",t:"100 Native Phrases",src:"English Lavka — 100 popular native phrases",items:V.native},
+{id:"phrasal",t:"50 Phrasal Verbs",src:"The 50 Most Common Phrasal Verbs (B. T. Stoakley)",items:PHRASAL},
+{id:"beautiful",t:"60 Beautiful Words",src:"English Lavka — the most beautiful English words",items:V.beautiful}].filter(d=>d.items.length);
+const DK=Object.fromEntries(DECKS.map(d=>[d.id,d]));
+const TOTAL=DECKS.reduce((a,d)=>a+d.items.length,0);
+
+const WEEKS=[
+{n:"Week 1",t:"Clear sounds and pace",f:"Finish your word endings, keep a steady 120–150 words per minute, and pause instead of saying “um”.",c:["Word endings are audible (-t, -d, -s, -ed)","Pace stays steady, no rushing at the end","I pause instead of saying “um”"]},
+{n:"Week 2",t:"Point first",f:"Point → Reason → Example → Point. Your main idea goes in the very first sentence, then one reason and one example.",c:["Main idea in the first sentence","One reason, not a list of everything","A concrete example","I return to the main point at the end"]},
+{n:"Week 3",t:"Precise wording",f:"Swap vague words (thing, stuff, a lot, very good) for specific ones: numbers, names, action verbs.",c:["No thing / stuff / a lot","A number, name or concrete detail","Short sentences, one idea each"]},
+{n:"Week 4",t:"Speaking under pressure",f:"Random topic, 15 seconds to prepare. Start without warming up, don't restart sentences, keep the structure.",c:["Started speaking within 5 seconds","No restarted sentences","3 filler words or fewer","Used a phrase of the day"]},
+{n:"Finale",t:"Review and compare",f:"Review all phrases and record a talk on the same topic as Day 1. Compare the numbers.",c:["Point-first structure","Clear word endings","Precise words","Live phrases from your vocabulary"]}];
+
+const WARM=[
+{t:"Diaphragm breathing",h:"Hand on your belly. Breathe in through your nose for 4 counts — your belly moves out, shoulders stay down. Breathe out on a long “sss”. 6 rounds."},
+{t:"Box breathing",h:"In 4 — hold 4 — out 4 — hold 4. Four rounds. Calms you before speaking."},
+{t:"Lip trills and humming",h:"20 seconds of “brrr” lip trills on the out-breath, then hum “mmm” and move into “ma-me-mi-mo-mu”. Relaxes lips and jaw."},
+{t:"Jaw and tongue warm-up",h:"Open your mouth wide 5 times, circle your tongue around your lips 5 times each way, then slowly and with exaggeration: “la-le-li-lo-lu, ta-te-ti-to-tu”."}];
+
+const DR=[
+["-ed endings","Say the last sound of every word clearly — don't swallow it.","I asked. He worked. She looked.\nWe talked, they walked, it stopped."],
+["The th sound","Tip of the tongue between your teeth, soft airflow.","Three thin thinkers thought thirty thoughts.\nThe weather this Thursday is better than that."],
+["R and L","R — the tongue doesn't touch the roof of the mouth. L — it touches the ridge behind your teeth.","Red lorry, yellow lorry.\nReally rural roads run left and right."],
+["Short and long i","Ship is short, sheep is long. Keep them apart.","Sit in this seat. Fill the wheel.\nHis ship is cheap; the sheep is big."],
+["Pausing for meaning","Pause at every “/”. A pause isn't a mistake — it sounds confident.","Today, / I want to share / one simple idea. /\nIf we plan less / and test more, / we learn faster."],
+["W and V","W — round your lips. V — top teeth touch the bottom lip.","Very well, Vincent, we will wait.\nWe value the view from the west window."],
+["Linking words","A final consonant links to the vowel of the next word.","Pick it up. Turn it off. Not at all.\nAn apple a day keeps it away."],
+["Sentence stress","Say it 7 times, stressing a different word each time. The meaning changes.","I didn't say she took the money."],
+["Question intonation","Yes/No questions go up. Wh- questions go down.","Are you coming? ↗\nWhere are you going? ↘\nCan we start at ten? ↗"],
+["Pause before the key word","A short pause before the key word makes it stand out without shouting.","The answer is… / time.\nWhat we need is… / focus."],
+["Contrastive stress","Stress the corrected word.","Not Tuesday — Thursday.\nI said fifteen, not fifty."],
+["Thought groups","Split into groups of 3–5 words. One breath per group.","The main problem / is not the budget. / It's the timeline."],
+["Numbers and dates","Say numbers clearly — they're what people ask you to repeat most.","Fifteen percent, fifty percent.\nThe 3rd of May, 2027, at 4:30."],
+["Shadowing","Press Listen and repeat half a word behind, copying the rhythm.","Let me give you the short version. We missed the deadline by two days, and here is how we fix it."],
+["Thing → specifics","Retell each sentence more precisely.","The thing is, the stuff was late.\n→ The issue is that the parts arrived two days late."],
+["A lot → a number","Replace “a lot” with a number or a comparison.","We had a lot of customers.\n→ We had 300 customers, twice as many as in May."],
+["Very good → one strong word","Use one strong word instead of very + adjective.","very good → excellent · very tired → exhausted\nvery big → huge · very important → crucial"],
+["Strong verbs","Replace do / make / get with a precise verb.","do a check → check · make a decision → decide\nget better → improve · do research → investigate"],
+["Drop the hedges","No kind of, sort of, I think maybe — say it directly.","I kind of think we should maybe wait.\n→ I recommend we wait until Friday."],
+["A concrete example","Add an example to each general statement.","Our app is easy to use.\n→ A new user books a table in three taps."],
+["Short sentences","Split this long sentence into three.","Because the client changed the scope and we didn't update the plan, the team worked late and still missed the date."],
+["Speed and clarity","First slowly, then twice as fast — without losing sounds.","Unique New York. Unique New York.\nRed leather, yellow leather."],
+["Tongue twister: s / sh","Slow → fast.","She sells seashells by the seashore."],
+["Tongue twister: p / b","A crisp burst of air on p and b.","Peter Piper picked a peck of pickled peppers."],
+["No warm-up","Start with the main point: read it, then say it in your own words in 10 seconds.","Bottom line: we need two more weeks."],
+["Recovering from a slip","If you stumble — pause, breathe, restart the thought, no “sorry”.","…so the plan — [pause] — the plan is simple: test first."],
+["Quick replies","Answer each question in one phrase, using slang from your vocabulary.","Pizza tonight?\nCan you send the file?\nWant to join us Saturday?"],
+["Whisper, then full voice","Read it in a whisper, articulating every sound, then in full voice.","Clear speech comes from clear thinking."],
+["Free warm-up","Repeat any three drills from this month that felt hardest.","Choose your three hardest drills."],
+["Final check","Read the Day 1 text and notice the difference.","I asked. He worked. She looked.\nThree thin thinkers thought thirty thoughts."]];
+
+const PR=[
+"Describe your typical morning in 60 seconds.","Talk about a place you love and why.","Describe a skill you are proud of.","Tell me about your last weekend.","Describe your job or studies to a new friend.","Talk about a book, film or series you liked recently.","Describe your ideal day off.",
+"Should people work from home? Give your point first.","Is it better to plan or to improvise? Point → reason → example.","What is one habit everyone should have?","Should kids learn to code at school?","Is social media good for friendships?","What makes a good manager?","Recommend one city to visit and defend it.",
+"Explain what you do at work to a 10-year-old.","Explain how to make your favourite dish, step by step.","Describe a problem you solved, with numbers.","Explain one decision you made this month and why.","Describe your hometown precisely: size, sights, people.","Explain a tool or app you use every day.","Give precise feedback on a product you use.",
+"Your flight is cancelled. Call the airline and explain what you need.","Introduce yourself at a networking event.","Your boss asks: why should we fund your idea?","Convince a friend to join you on a weekend trip.","You are late for a meeting. Explain and move on.","Pitch your favourite hobby in 60 seconds.","Answer: what would you change in your city?",
+"Final: describe your typical morning — compare with Day 1.","Final: what did you learn in these 30 days?"];
+const RANDOM=["What's the best advice you've ever received?","Describe a mistake that taught you something.","If you could live anywhere, where and why?","What would you do with an extra hour every day?","Describe someone who inspires you.","What is overrated and what is underrated?","Describe your perfect team.","What technology could you not live without?","Tell a short story about a surprise.","What would you tell your younger self?","Explain a trend you've noticed lately.","Plan a party for your friends in 90 seconds.",
+"Work: give a 60-second status update on your project — bottom line first.","Work: the client asks for extra scope with no budget. Push back politely.","Work: flag a risk to your director and propose a mitigation plan.","Work: your supplier is three weeks late. Explain the knock-on effect.","Work: open a kick-off meeting — purpose, agenda, owners.","Work: give constructive feedback to an engineer whose report fell short.","Work: recommend a go / no-go decision and defend it.","Work: explain a technical trade-off to a non-technical manager."];
+const ENGTOPICS=RANDOM.filter(t=>t.startsWith("Work:"));
+
+const FILL=/\b(um+|uh+|erm|er|like|you know|basically|actually|literally|sort of|kind of|i mean)\b/gi;
+const VAGUE=/\b(thing|things|stuff|a lot|lots of|very|really|nice|good)\b/gi;
+
+const LS="speakclear.v1";
+let S={done:{},known:{},logs:[],sel:0};
+const fix=s=>{const k={};for(const x in s.known||{})k[/^\d+$/.test(x)?"live:"+x:x]=1;s.known=k;return s};
+try{const r=localStorage.getItem(LS);if(r)S=fix(Object.assign(S,JSON.parse(r)))}catch(e){}
+
+let dbRef=null,saving=false,again=false,dbStatus="Progress is saved in this browser.";
+function persist(){
+  try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}
+  if(!dbRef)return;
+  if(saving){again=true;return}
+  saving=true;
+  dbRef.set(JSON.parse(JSON.stringify(S))).catch(()=>{}).finally(()=>{saving=false;if(again){again=false;persist()}});
+}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+const wk=n=>n<=7?0:n<=14?1:n<=21?2:n<=28?3:4;
+const dayVocab=n=>{if(!LIVE.length)return ST.map((p,i)=>i).filter(i=>i%30===n-1).map(i=>["st",i]);const l=n<=25?[2*n-2,2*n-1]:Array.from({length:10},(_,i)=>(n-26)*10+i);return l.map(i=>["live",i])};
+const dayEng=n=>ENG.map((p,i)=>i).filter(i=>i%30===n-1);
+const doneOf=n=>S.done[n]||[];
+const full=n=>doneOf(n).length>=4;
+const curDay=()=>{for(let n=1;n<=30;n++)if(!full(n))return n;return 30};
+
+/* ---- speech out: Claude voice, else browser voice ---- */
+let tts=null;
+function say(text,rate){
+  if(tts){tts.speak(text,{language:"en",rate:rate||1}).catch(()=>{});return}
+  if(window.speechSynthesis){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=rate||1;speechSynthesis.speak(u)}catch(e){}}
+}
+if(window.speechSynthesis)document.body.classList.add("has-tts");
+
+/* ---- dictation ---- */
+let dict=null,listening=false;
+const MICNOTE="Start runs the timer and transcribes your speech. You can correct the text by hand.";
+function onDict(){
+  dict.onPartial(({text})=>{const p=$("#txp");if(p)p.textContent=text});
+  dict.onFinal(({text})=>{const t=$("#tx");if(t){t.value=(t.value?t.value+" ":"")+text;analyse()}const p=$("#txp");if(p)p.textContent=""});
+  dict.onState(({state})=>{listening=state==="listening";const b=$("#mic");if(b){b.setAttribute("aria-pressed",listening);b.textContent=listening?"Stop recording":"Record speech"}});
+}
+
+/* ---- browser speech recognition, used when the page runs outside Claude ---- */
+function browserDict(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;
+  let rec=null,want=false,cb={p:()=>{},f:()=>{},s:()=>{}};
+  const make=()=>{const r=new SR();r.lang="en-US";r.continuous=true;r.interimResults=true;
+    r.onresult=e=>{let part="";for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];if(x.isFinal)cb.f({text:x[0].transcript.trim()});else part+=x[0].transcript}cb.p({text:part})};
+    r.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){want=false;cb.s({state:"idle",reason:"not_granted"})}};
+    r.onend=()=>{if(want){try{r.start()}catch(x){want=false;cb.s({state:"idle",reason:"stopped"})}}else cb.s({state:"idle",reason:"stopped"})};
+    return r};
+  return{
+    start(){want=true;rec=rec||make();try{rec.start()}catch(x){}cb.s({state:"listening"});return Promise.resolve()},
+    stop(){want=false;try{rec&&rec.stop()}catch(x){}return Promise.resolve()},
+    onPartial(f){cb.p=f},onFinal(f){cb.f=f},onState(f){cb.s=f}};
+}
+const inClaude=!!(window.claude&&claude.use);
+if(!inClaude){dict=browserDict();if(dict)onDict()}
+
+/* ---- timer ---- */
+let T={len:60,left:60,id:null,start:0};
+function ringHTML(){return `<div class="ring" id="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--pan)" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="54" fill="none" stroke="var(--co)" stroke-width="10" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="0" id="arc"/></svg><div class="t" id="tt"></div></div>`}
+function drawT(){const a=$("#arc"),t=$("#tt");if(!a)return;a.style.strokeDashoffset=339.3*(1-T.left/T.len);const s=Math.max(0,Math.ceil(T.left));t.textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");$("#ring").classList.toggle("run",!!T.id)}
+function stopT(){clearInterval(T.id);T.id=null;drawT();const b=$("#go");if(b)b.textContent="Start"}
+function startT(){
+  if(T.id){stopT();if(dict&&listening)dict.stop().catch(()=>{});return}
+  if(T.left<=0)T.left=T.len;
+  T.start=Date.now()-(T.len-T.left)*1000;
+  T.id=setInterval(()=>{T.left=T.len-(Date.now()-T.start)/1000;if(T.left<=0){T.left=0;stopT();if(dict&&listening)dict.stop().catch(()=>{})}drawT();analyse()},250);
+  $("#go").textContent="Pause";drawT();
+}
+function setLen(s){stopT();T.len=s;T.left=s;drawT();document.querySelectorAll("[data-len]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.len===s))}
+function elapsed(){return Math.max(1,T.len-T.left)}
+
+function analyse(){
+  const tx=$("#tx");if(!tx)return;const v=tx.value.trim();
+  const words=v?v.split(/\s+/).length:0;
+  const f=(v.match(FILL)||[]),g=(v.match(VAGUE)||[]);
+  const sec=elapsed();const wpm=words&&sec>5?Math.round(words/(sec/60)):0;
+  $("#sw").textContent=words;$("#sp").textContent=wpm||"—";$("#sf").textContent=f.length;$("#sv").textContent=g.length;
+  const tip=!wpm?"":wpm<100?"A bit slow — you can add some energy.":wpm>170?"Fast — add some pauses.":"Good pace.";
+  const u=a=>esc([...new Set(a.map(x=>x.toLowerCase()))].join(", "));
+  $("#flags").innerHTML=(tip?esc(tip)+" ":"")+(f.length?"Fillers: <mark>"+u(f)+"</mark>. ":"")+(g.length?"Vague words: <mark>"+u(g)+"</mark>.":"");
+  return{w:words,wpm,f:f.length,v:g.length,s:Math.round(sec)};
+}
+
+function speakBlock(prompt,day,checks,mode){
+  return `<p class="big" id="prompt">${esc(prompt)}</p>
+  <div class="row"><span class="note">Time:</span>${[[30,"30 sec"],[60,"1 min"],[90,"1.5 min"],[120,"2 min"]].map(([s,l])=>`<button class="btn" data-len="${s}" aria-pressed="${s===T.len}">${l}</button>`).join("")}${mode==="st"?`<button class="btn" id="sitd">Daily situation</button><button class="btn" id="sitp">Event situation</button>`:day?"":`<button class="btn" id="rnd">Random topic</button><button class="btn" id="rndw">Work topic</button>`}</div>
+  <div class="speak">${ringHTML()}<div>
+    <div class="row"><button class="btn hot" id="go">Start</button><button class="btn" id="mic" aria-pressed="false" hidden>Record speech</button><button class="btn" id="reset">Reset</button></div>
+    <p class="note" id="micnote">Speak out loud. If recording isn't available, type a short version of what you said after the timer — the counters will update.</p>
+    <textarea id="tx" placeholder="Your speech will appear here…"></textarea>
+    <div class="partial" id="txp"></div>
+    <div class="stats"><div><b id="sw">0</b><span>words</span></div><div><b id="sp">—</b><span>words / min</span></div><div><b id="sf">0</b><span>fillers</span></div><div><b id="sv">0</b><span>vague words</span></div></div>
+    <div class="flags" id="flags"></div>
+    ${checks?`<h3 style="margin-top:14px">Self-check</h3><ul class="check">${checks.map(c=>`<li><label class="chk"><input type="checkbox">${esc(c)}</label></li>`).join("")}</ul>`:""}
+    <button class="btn pri" id="savelog" data-day="${day}">Save attempt</button> <span class="status" id="saved"></span>
+  </div></div>`;
+}
+function bindSpeak(){
+  T.left=T.len;drawT();
+  document.querySelectorAll("[data-len]").forEach(b=>b.onclick=()=>setLen(+b.dataset.len));
+  $("#go").onclick=()=>{if(dict&&!T.id&&!listening)dict.start().catch(()=>{});startT()};
+  const mic=$("#mic");
+  if(dict){mic.hidden=false;$("#micnote").textContent=MICNOTE}
+  mic.onclick=()=>{if(listening){dict.stop().catch(()=>{})}else{dict.start().catch(e=>{if(e&&e.code==="not_granted")mic.hidden=true})}};
+  $("#reset").onclick=()=>{stopT();if(dict&&listening)dict.stop().catch(()=>{});T.left=T.len;drawT();$("#tx").value="";analyse()};
+  $("#tx").oninput=analyse;
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  const r=$("#rnd");if(r)r.onclick=()=>{$("#prompt").textContent=pick(RANDOM)};
+  const rw=$("#rndw");if(rw)rw.onclick=()=>{$("#prompt").textContent=pick(ENGTOPICS)};
+  for(const c of ["d","p"]){const b=$("#sit"+c);if(b)b.onclick=()=>{$("#prompt").textContent=pick(SIT[c])+" Open, ask two follow-ups, then exit gracefully."}}
+  $("#savelog").onclick=e=>{const a=analyse();if(!a.w){$("#saved").textContent="Say or type at least a couple of sentences first.";return}
+    S.logs.unshift({d:+e.target.dataset.day,ts:Date.now(),...a});S.logs=S.logs.slice(0,200);persist();$("#saved").textContent="Saved ✓";renderHead()};
+  analyse();
+}
+
+function sayText(p){return p[0]+(p[2]?". "+p[2]:"")}
+function itemBody(p,deck,brief){
+  return `<b>${esc(p[0])}</b>${p[4]?`<span class="ipa">${esc(p[4])}</span>`:""}<span class="tag">${esc(p[5]||DK[deck].t)}</span>
+  <div class="ru">${esc(p[1])}</div>${brief?"":`${p[2]?`<div class="ex">${esc(p[2])}</div>`:""}${p[3]?`<div class="ru">${esc(p[3])}</div>`:""}${p[6]?`<div class="when">When: ${esc(p[6])}</div>`:""}`}`}
+function phCard(deck,i,brief){const p=DK[deck].items[i];if(!p)return "";return `<div class="ph">${itemBody(p,deck,brief)} <div class="row more"><button class="btn sm say" data-say="${esc(sayText(p))}">▶ Listen</button></div></div>`}
+
+/* ---- views ---- */
+function vToday(){
+  const n=S.sel||curDay(),w=WEEKS[wk(n)],d=doneOf(n),dr=DR[n-1],wm=WARM[(n-1)%4],vo=dayVocab(n),rev=n>25;
+  const st=(i,title,body)=>`<section class="step${d.includes(i)?" dn":""}"><div class="num">${i+1}</div><div><h3>${title}</h3>${body}<label class="chk"><input type="checkbox" data-step="${i}" ${d.includes(i)?"checked":""}>Done</label></div></section>`;
+  const drillSay=esc(dr[2].replace(/\n/g," ").replace(/→/g,". "));
+  return `<div class="row" style="justify-content:space-between"><button class="btn" id="prev" ${n<=1?"disabled":""}>← Day ${n-1||""}</button><button class="btn" id="next" ${n>=30?"disabled":""}>Day ${n<30?n+1:""} →</button></div>
+  <h2 style="margin-top:16px">Day ${n} · ${esc(w.t)}</h2><p class="meta">${esc(w.n)}. ${esc(w.f)}</p>
+  ${st(0,"Warm-up · 2 min: "+esc(wm.t),`<p>${esc(wm.h)}</p>`)}
+  ${st(1,"Diction · 3 min: "+esc(dr[0]),`<p>${esc(dr[1])}</p><p class="big">${esc(dr[2])}</p><div class="row"><button class="btn say" data-say="${drillSay}">▶ Listen</button><button class="btn say" data-say="${drillSay}" data-rate="0.75">▶ Slowly</button></div>`)}
+  ${st(2,(rev?"Vocabulary review":"Vocabulary of the day")+" · 5 min",`<p>${rev&&LIVE.length?"Cover the translation and recall the meaning. Then make your own sentence with each phrase.":"Shadowing: listen, repeat 3 times in the same rhythm, then make your own sentence about your life."}</p>
+    <h3 style="margin-top:14px;font-size:16px">${!LIVE.length?"Small talk":rev?"Review: 50 Live Phrases":"Live phrases"}</h3>${vo.map(v=>phCard(v[0],v[1],rev&&v[0]==="live")).join("")}
+    <h3 style="margin-top:14px;font-size:16px">Engineering management</h3>${dayEng(n).map(i=>phCard("eng",i)).join("")}
+    ${DK.phrasal?`<h3 style="margin-top:14px;font-size:16px">Phrasal verb</h3>${phCard("phrasal",n-1)}`:""}
+    ${DK.beautiful?`<h3 style="margin-top:14px;font-size:16px">Beautiful word</h3>${phCard("beautiful",n-1)}`:""}`)}
+  ${st(3,"Speak · 5 min",`<p>${wk(n)===3?"15 seconds to prepare, then talk without stopping.":"Decide on your main idea, press Start and talk until the timer ends."} Try to use a phrase of the day.</p>${speakBlock(PR[n-1],n,w.c)}`)}`;
+}
+function vPlan(){
+  const c=curDay();
+  return `<h2>The 30-day plan</h2><p class="meta">Every day has 4 steps, about 15 minutes. Tap a day to open it.</p>
+  ${WEEKS.map((w,wi)=>{const ds=[];for(let n=1;n<=30;n++)if(wk(n)===wi)ds.push(n);
+    return `<div class="week"><h3>${esc(w.n)}: ${esc(w.t)}</h3><p class="note">${esc(w.f)}</p><div class="days">${ds.map(n=>`<button data-day="${n}" class="${full(n)?"d":doneOf(n).length?"p":""}">Day ${n}<small>${full(n)?"done":n===c?"today":doneOf(n).length?doneOf(n).length+" of 4":esc(DR[n-1][0])}</small></button>`).join("")}</div></div>`}).join("")}
+  <div class="week" id="sync"><h3>Move your progress to another device</h3>
+  <p class="note">Copy your progress code here, then paste it into the app on your other device and press Import. It carries finished days, known words and saved attempts.</p>
+  <div class="row"><button class="btn pri" id="exp">Copy progress code</button><button class="btn" id="imp">Import code</button></div>
+  <textarea id="pcode" placeholder="Paste a progress code here, then press Import" style="min-height:80px;margin-top:10px"></textarea>
+  <p class="status" id="pmsg"></p></div>
+  <div class="src"><h3>Where the method comes from</h3><p class="note">Exercises are written from scratch, inspired by open programmes: <a href="https://articulatemethod.com/lessons">Articulate Method</a> (30 days, pauses, one idea in 60–90 seconds), <a href="https://getlucidly.app/blog/articulation-training-for-adults.html">Lucidly</a> (4 weeks: sounds → point first → precision → pressure), <a href="https://theelocutionacademy.com/course/elocution-essentials">The Elocution Academy</a> (breathing, intonation) and <a href="https://speakwithoraton.com/blog/articulation-training-9-exercises-to-improve-speech-clarity">Oraton</a> (shadowing, one-minute recordings).</p>
+  <p class="note">Vocabulary decks: ${DECKS.map(d=>esc(d.t)+" — "+esc(d.src)).join("; ")}.</p></div>`;
+}
+let PF={deck:"live",g:"all",q:"",mode:"list",qi:null,show:false};
+function vPhrases(){
+  if(!DK[PF.deck])PF.deck=DECKS[0].id;
+  const D=DK[PF.deck],groups=[...new Set(D.items.map(p=>p[5]).filter(Boolean))];
+  if(PF.g!=="all"&&PF.g!=="new"&&!groups.includes(PF.g))PF.g="all";
+  const key=i=>PF.deck+":"+i;
+  const list=D.items.map((p,i)=>i).filter(i=>{const p=D.items[i];return (PF.g==="all"||(PF.g==="new"?!S.known[key(i)]:p[5]===PF.g))&&(!PF.q||(p[0]+" "+p[1]+" "+p[2]).toLowerCase().includes(PF.q.toLowerCase()))});
+  const kn=D.items.filter((p,i)=>S.known[key(i)]).length,knAll=Object.keys(S.known).length;
+  const chips=[["all","All"]].concat(groups.map(g=>[g,g[0].toUpperCase()+g.slice(1)])).concat([["new","Not learned yet"]]);
+  let body;
+  if(PF.mode==="list"){
+    body=`<div class="plist">${list.map(i=>{const p=D.items[i],k=S.known[key(i)];return `<div class="ph${k?" k":""}"><div>${itemBody(p,PF.deck)}</div><div class="row" style="flex-direction:column;align-items:stretch"><button class="btn say" data-say="${esc(sayText(p))}" aria-label="Listen">▶</button><button class="btn" data-known="${i}" aria-pressed="${!!k}">${k?"Known ✓":"I know it"}</button></div></div>`}).join("")||'<p class="empty">Nothing found.</p>'}</div>`;
+  }else{
+    if(PF.qi===null||!list.includes(PF.qi))PF.qi=list.length?list[Math.floor(Math.random()*list.length)]:null;
+    const p=PF.qi===null?null:D.items[PF.qi];
+    body=p?`<div class="quiz"><p class="note">How do you say it in English?</p><p class="q">${esc(p[1])}</p>${p[6]?`<p class="note">When: ${esc(p[6])}</p>`:""}
+      <input class="ans" id="ans" placeholder="Your answer (optional)" autocomplete="off">
+      ${PF.show?`<p style="margin-top:14px"><b style="font-size:22px">${esc(p[0])}</b>${p[4]?` <span class="note">${esc(p[4])}</span>`:""} <button class="btn sm say" data-say="${esc(sayText(p))}">▶</button></p>${p[2]?`<p class="ex">${esc(p[2])}</p>`:""}<div class="row"><button class="btn pri" data-q="yes">I knew it</button><button class="btn" data-q="no">Still learning</button></div>`:`<div class="row" style="margin-top:12px"><button class="btn pri" id="reveal">Show answer</button></div>`}</div>`:'<p class="empty">Everything in this set is learned. Choose “All”.</p>';
+  }
+  return `<h2>Vocabulary</h2><p class="meta">${DECKS.length} decks, ${TOTAL} items. Learned: ${knAll} of ${TOTAL}.</p>
+  <div class="decks">${DECKS.map(d=>`<button class="btn" data-deck="${d.id}" aria-pressed="${PF.deck===d.id}">${esc(d.t)}</button>`).join("")}</div>
+  <p class="note">${esc(D.src)} · learned ${kn} of ${D.items.length}</p>
+  <div class="row"><button class="btn" data-mode="list" aria-pressed="${PF.mode==="list"}">List</button><button class="btn" data-mode="quiz" aria-pressed="${PF.mode==="quiz"}">Flashcard quiz</button></div>
+  <div class="chips">${chips.map(c=>`<button class="btn sm" data-g="${esc(c[0])}" aria-pressed="${PF.g===c[0]}">${esc(c[1])}</button>`).join("")}</div>
+  ${PF.mode==="list"?`<input type="search" id="q" placeholder="Search this deck" value="${esc(PF.q)}">`:""}${body}`;
+}
+let STC="b";
+function vSmall(){
+  const ok=p=>STC==="b"||p[7]==="b"||p[7]===STC;
+  const ctx=[["b","All"],["d","Daily life"],["p","Conferences & forums"]];
+  return `<h2>Small talk</h2><p class="meta">Start, keep and end a conversation with ease — at a party or at a conference coffee break.</p>
+  <div class="row">${ctx.map(c=>`<button class="btn" data-ctx="${c[0]}" aria-pressed="${STC===c[0]}">${c[1]}</button>`).join("")}</div>
+  <div class="flow">${STAGES.map((s,i)=>`<a href="#smalltalk" data-jump="st${i}"><b>${i+1}. ${esc(s.s)}</b><span>${esc(s.h)}</span></a>`).join("")}</div>
+  ${STAGES.map((s,i)=>{const items=ST.map((p,j)=>[p,j]).filter(([p])=>p[5]===s.s&&ok(p));if(!items.length)return "";
+    return `<section class="week" id="st${i}"><h3>${i+1}. ${esc(s.s)}</h3><p class="note">${esc(s.h)}</p>${items.map(([p])=>`<div class="ph"><b>${esc(p[0])}</b><span class="tag">${p[7]==="d"?"daily":p[7]==="p"?"events":"anywhere"}</span><div class="ru">${esc(p[1])}</div><div class="when">${esc(p[6])}</div><div class="row more"><button class="btn sm say" data-say="${esc(p[0])}">▶ Listen</button></div></div>`).join("")}</section>`}).join("")}
+  <section class="week"><h3>Learn from great speakers</h3><p class="note">How well-known speakers deliver ideas — each with a 1-minute drill and a small-talk tip. Techniques are general observations; not affiliated with or endorsed by these people.</p>
+  <div class="styles">${STYLES.map(s=>`<article class="sty"><p class="note">${esc(s.n)}</p><h3>${esc(s.t)}</h3><p>${esc(s.how)}</p><p><b>Drill:</b> ${esc(s.drill)}</p><p><b>In small talk:</b> ${esc(s.st)}</p><button class="btn sm say" data-say="${esc(s.drill)}">▶ Listen to the drill</button></article>`).join("")}</div></section>
+  <section class="week"><h3>Practise a conversation</h3><p class="note">Pick a situation and say your side out loud: opener, two follow-up questions, a short story of your own, a graceful exit.</p>
+  ${speakBlock(SIT.p[0]+" Open, ask two follow-ups, then exit gracefully.",0,["Opened within 5 seconds","Used their name","Asked two follow-up questions","Shared a short story or detail","Exited warmly with a next step"],"st")}</section>`;
+}
+function vPractice(){
+  const L=S.logs.slice(0,30);
+  return `<h2>Free practice</h2><p class="meta">Pick a random topic and talk for 60–90 seconds. The numbers show your progress.</p>
+  ${speakBlock(RANDOM[Math.floor(Math.random()*RANDOM.length)],0,null)}
+  <h3 style="margin-top:28px">Attempt history</h3>${L.length?`<table class="stack"><thead><tr><th>Date</th><th>Day</th><th class="n">Sec</th><th class="n">Words</th><th class="n">Words/min</th><th class="n">Fillers</th></tr></thead><tbody>${L.map(l=>`<tr><td>${new Date(l.ts).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</td><td>${l.d?"Day "+l.d:"Practice"}</td><td class="n">${l.s}</td><td class="n">${l.w}</td><td class="n">${l.wpm||"—"}</td><td class="n">${l.f}</td></tr>`).join("")}</tbody></table>`:'<p class="empty">No saved attempts yet.</p>'}`;
+}
+
+function renderHead(){
+  const c=curDay(),dn=Object.keys(S.done).filter(n=>full(+n)).length;
+  $("#strip").innerHTML=Array.from({length:30},(_,i)=>`<i class="${full(i+1)?"d":doneOf(i+1).length?"p":""}${i+1===(S.sel||c)?" c":""}" title="Day ${i+1}"></i>`).join("");
+  $("#stripnote").textContent=`Days done: ${dn} of 30 · talks saved: ${S.logs.length} · ${dbStatus}`;
+}
+function route(){
+  const h=(location.hash||"#today").slice(1);const v=["today","plan","phrases","smalltalk","practice"].includes(h)?h:"today";
+  stopT();if(dict&&listening)dict.stop().catch(()=>{});
+  document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+v));
+  $("#view").innerHTML=v==="today"?vToday():v==="plan"?vPlan():v==="phrases"?vPhrases():v==="smalltalk"?vSmall():vPractice();
+  if($("#tx"))bindSpeak();
+  renderHead();
+}
+document.addEventListener("click",e=>{
+  const j=e.target.closest("a[data-jump]");if(j){e.preventDefault();const s=document.getElementById(j.dataset.jump);if(s)s.scrollIntoView({behavior:"smooth"});return}
+  const t=e.target.closest("button,input");if(!t)return;
+  if(t.dataset.ctx){STC=t.dataset.ctx;route();return}
+  if(t.id==="exp"){const code="SC1."+btoa(unescape(encodeURIComponent(JSON.stringify(S))));const a=$("#pcode");a.value=code;a.select();
+    const ok=()=>{$("#pmsg").textContent="Code copied. Paste it into the app on your other device."};
+    try{navigator.clipboard.writeText(code).then(ok,()=>{$("#pmsg").textContent="Code selected — copy it from the box."})}catch(x){$("#pmsg").textContent="Code selected — copy it from the box."}return}
+  if(t.id==="imp"){const v=$("#pcode").value.trim();
+    try{if(!v.startsWith("SC1."))throw 0;const o=JSON.parse(decodeURIComponent(escape(atob(v.slice(4)))));if(typeof o!=="object"||!o.done)throw 0;
+      S=fix({done:o.done||{},known:o.known||{},logs:Array.isArray(o.logs)?o.logs.slice(0,200):[],sel:+o.sel||0});persist();route();location.hash="#plan";const m=$("#pmsg");if(m)m.textContent="Progress imported ✓"}
+    catch(x){$("#pmsg").textContent="That doesn't look like a progress code. Copy it again from the other device."}return}
+  if(t.dataset.say){say(t.dataset.say,+t.dataset.rate||1);return}
+  if(t.dataset.step!==undefined){const n=S.sel||curDay(),i=+t.dataset.step,a=new Set(doneOf(n));t.checked?a.add(i):a.delete(i);S.done[n]=[...a];S.sel=n;persist();t.closest(".step").classList.toggle("dn",t.checked);renderHead();return}
+  if(t.id==="prev"||t.id==="next"){S.sel=(S.sel||curDay())+(t.id==="next"?1:-1);persist();route();scrollTo(0,0);return}
+  if(t.dataset.day&&t.closest(".days")){S.sel=+t.dataset.day;persist();location.hash="#today";if(location.hash==="#today")route();scrollTo(0,0);return}
+  if(t.dataset.known){const k=PF.deck+":"+t.dataset.known;S.known[k]?delete S.known[k]:S.known[k]=1;persist();route();return}
+  if(t.dataset.deck){PF.deck=t.dataset.deck;PF.g="all";PF.q="";PF.qi=null;PF.show=false;route();return}
+  if(t.dataset.mode){PF.mode=t.dataset.mode;PF.show=false;route();return}
+  if(t.dataset.g){PF.g=t.dataset.g;PF.qi=null;PF.show=false;route();return}
+  if(t.id==="reveal"){PF.show=true;route();return}
+  if(t.dataset.q){const k=PF.deck+":"+PF.qi;if(t.dataset.q==="yes")S.known[k]=1;else delete S.known[k];persist();PF.qi=null;PF.show=false;route();return}
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){PF.q=e.target.value;const pos=e.target.selectionStart;route();const q=$("#q");q.focus();q.setSelectionRange(pos,pos)}});
+addEventListener("hashchange",route);
+route();
+
+/* ---- capabilities: light up when available ---- */
+if(inClaude){
+  claude.use("tts").then(t=>{if(t){tts=t;document.body.classList.add("has-tts")}}).catch(()=>{});
+  claude.use("dictation").then(d=>{if(d){dict=d;onDict();const m=$("#mic");if(m){m.hidden=false;$("#micnote").textContent=MICNOTE}}}).catch(()=>{});
+  Promise.all([claude.use("db"),claude.use("user")]).then(async([db,user])=>{
+    if(!db||!user)return;const id=await user.id();if(!id)return;
+    const ref=db.collection("data/users/"+id).doc("progress");
+    const snap=await ref.get();
+    if(snap.exists)S=fix(Object.assign({done:{},known:{},logs:[],sel:0},JSON.parse(JSON.stringify(snap.data()))));
+    dbRef=ref;dbStatus="Progress is saved to your account.";
+    if(!snap.exists)persist();
+    route();
+  }).catch(()=>{});
+}
+}
+</script>
+</body>
+</html>

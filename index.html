@@ -280,7 +280,7 @@ const STYLES=[
 {n:"Morgan Freeman",t:"Low, slow, resonant voice",how:"Speaks in a calm low register with few words and long pauses, so every word carries weight.",drill:"Hum “mmm” to find your natural low pitch, then say “Let me tell you what happened” slowly, from the chest.",st:"Lower your pitch slightly and slow down when you introduce yourself."},
 {n:"Mel Robbins",t:"Direct, practical, action now",how:"Short sentences, a clear practical tip and a push to act within seconds instead of overthinking.",drill:"Count 5-4-3-2-1 in your head and start talking to the camera or mirror on “1” with your opener.",st:"See someone you want to meet? Count down and walk over before doubt kicks in."}];
 const V={slang:[],native:[],beautiful:[]};
-const DECKS=[
+const BUILTIN=[
 {id:"live",t:"50 Live Phrases",src:"English Lavka — 50 phrases natives say right now",items:LIVE},
 {id:"eng",t:"Engineering Management",src:"Sharp professional expressions for engineering managers: meetings, status, risks, decisions, scope, quality, people",items:ENG},
 {id:"st",t:"Small Talk",src:"Openers, follow-ups, exits and follow-ups for daily life and professional events",items:ST},
@@ -288,8 +288,20 @@ const DECKS=[
 {id:"native",t:"100 Native Phrases",src:"English Lavka — 100 popular native phrases",items:V.native},
 {id:"phrasal",t:"50 Phrasal Verbs",src:"The 50 Most Common Phrasal Verbs (B. T. Stoakley)",items:PHRASAL},
 {id:"beautiful",t:"60 Beautiful Words",src:"English Lavka — the most beautiful English words",items:V.beautiful}].filter(d=>d.items.length);
-const DK=Object.fromEntries(DECKS.map(d=>[d.id,d]));
-const TOTAL=DECKS.reduce((a,d)=>a+d.items.length,0);
+/* private decks: loaded by the viewer from a file on their device, kept only in this browser */
+const PRIV="speakclear.decks";
+const ORDER=["live","eng","st","slang","native","phrasal","beautiful"];
+let DECKS=[],DK={},TOTAL=0;
+function loadPriv(){try{const r=JSON.parse(localStorage.getItem(PRIV)||"null");return r&&Array.isArray(r.decks)?r.decks:[]}catch(e){return []}}
+function cleanDeck(d){return{id:String(d.id).replace(/[^a-z0-9_-]/gi,"").slice(0,40),t:String(d.t||d.id).slice(0,80),src:String(d.src||"Your private deck").slice(0,200),priv:true,
+  items:(Array.isArray(d.items)?d.items:[]).filter(Array.isArray).slice(0,2000).map(x=>{const r=x.slice(0,8).map(v=>v==null?"":String(v).slice(0,400));while(r.length<7)r.push("");return r}).filter(r=>r[0])}}
+function setDecks(){
+  const priv=loadPriv().filter(d=>d&&d.id).map(cleanDeck).filter(d=>d.id&&d.items.length&&!BUILTIN.some(b=>b.id===d.id));
+  const rank=id=>{const i=ORDER.indexOf(id);return i<0?99:i};
+  DECKS=BUILTIN.concat(priv).sort((a,b)=>rank(a.id)-rank(b.id));
+  DK=Object.fromEntries(DECKS.map(d=>[d.id,d]));TOTAL=DECKS.reduce((a,d)=>a+d.items.length,0);
+}
+setDecks();
 
 const WEEKS=[
 {n:"Week 1",t:"Clear sounds and pace",f:"Finish your word endings, keep a steady 120–150 words per minute, and pause instead of saying “um”.",c:["Word endings are audible (-t, -d, -s, -ed)","Pace stays steady, no rushing at the end","I pause instead of saying “um”"]},
@@ -366,7 +378,7 @@ function persist(){
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const wk=n=>n<=7?0:n<=14?1:n<=21?2:n<=28?3:4;
-const dayVocab=n=>{if(!LIVE.length)return ST.map((p,i)=>i).filter(i=>i%30===n-1).map(i=>["st",i]);const l=n<=25?[2*n-2,2*n-1]:Array.from({length:10},(_,i)=>(n-26)*10+i);return l.map(i=>["live",i])};
+const dayVocab=n=>{if(!DK.live)return ST.map((p,i)=>i).filter(i=>i%30===n-1).map(i=>["st",i]);const L=DK.live.items.length;const l=n<=25?[2*n-2,2*n-1]:Array.from({length:10},(_,i)=>(n-26)*10+i);return l.filter(i=>i<L).map(i=>["live",i])};
 const dayEng=n=>ENG.map((p,i)=>i).filter(i=>i%30===n-1);
 const doneOf=n=>S.done[n]||[];
 const full=n=>doneOf(n).length>=4;
@@ -511,8 +523,8 @@ function vToday(){
   <h2 style="margin-top:16px">Day ${n} · ${esc(w.t)}</h2><p class="meta">${esc(w.n)}. ${esc(w.f)}</p>
   ${st(0,"Warm-up · 2 min: "+esc(wm.t),`<p>${esc(wm.h)}</p>`)}
   ${st(1,"Diction · 3 min: "+esc(dr[0]),`<p>${esc(dr[1])}</p><p class="big">${esc(dr[2])}</p><div class="row"><button class="btn say" data-say="${drillSay}">▶ Listen</button><button class="btn say" data-say="${drillSay}" data-rate="0.75">▶ Slowly</button></div>`)}
-  ${st(2,(rev?"Vocabulary review":"Vocabulary of the day")+" · 5 min",`<p>${rev&&LIVE.length?"Cover the translation and recall the meaning. Then make your own sentence with each phrase.":"Shadowing: listen, repeat 3 times in the same rhythm, then make your own sentence about your life."}</p>
-    <h3 style="margin-top:14px;font-size:16px">${!LIVE.length?"Small talk":rev?"Review: 50 Live Phrases":"Live phrases"}</h3>${vo.map(v=>phCard(v[0],v[1],rev&&v[0]==="live")).join("")}
+  ${st(2,(rev?"Vocabulary review":"Vocabulary of the day")+" · 5 min",`<p>${rev&&DK.live?"Cover the translation and recall the meaning. Then make your own sentence with each phrase.":"Shadowing: listen, repeat 3 times in the same rhythm, then make your own sentence about your life."}</p>
+    <h3 style="margin-top:14px;font-size:16px">${!DK.live?"Small talk":rev?"Review: Live Phrases":"Live phrases"}</h3>${vo.map(v=>phCard(v[0],v[1],rev&&v[0]==="live")).join("")}
     <h3 style="margin-top:14px;font-size:16px">Engineering management</h3>${dayEng(n).map(i=>phCard("eng",i)).join("")}
     ${DK.phrasal?`<h3 style="margin-top:14px;font-size:16px">Phrasal verb</h3>${phCard("phrasal",n-1)}`:""}
     ${DK.beautiful?`<h3 style="margin-top:14px;font-size:16px">Beautiful word</h3>${phCard("beautiful",n-1)}`:""}`)}
@@ -555,7 +567,12 @@ function vPhrases(){
   <p class="note">${esc(D.src)} · learned ${kn} of ${D.items.length}</p>
   <div class="row"><button class="btn" data-mode="list" aria-pressed="${PF.mode==="list"}">List</button><button class="btn" data-mode="quiz" aria-pressed="${PF.mode==="quiz"}">Flashcard quiz</button></div>
   <div class="chips">${chips.map(c=>`<button class="btn sm" data-g="${esc(c[0])}" aria-pressed="${PF.g===c[0]}">${esc(c[1])}</button>`).join("")}</div>
-  ${PF.mode==="list"?`<input type="search" id="q" placeholder="Search this deck" value="${esc(PF.q)}">`:""}${body}`;
+  ${PF.mode==="list"?`<input type="search" id="q" placeholder="Search this deck" value="${esc(PF.q)}">`:""}${body}
+  <section class="week" id="private"><h3>Your private decks</h3>
+  <p class="note">Load a deck file saved on your device, for example from iCloud Drive. The decks stay only in this browser and are never uploaded anywhere.</p>
+  <label class="btn pri" style="display:inline-flex;align-items:center;cursor:pointer">Load deck file<input type="file" id="deckfile" accept=".json,application/json,text/plain" hidden></label>
+  ${DECKS.filter(d=>d.priv).map(d=>`<div class="row" style="margin-top:8px"><span>${esc(d.t)} · ${d.items.length}</span><button class="btn sm" data-rmdeck="${esc(d.id)}">Remove</button></div>`).join("")||'<p class="note" style="margin-top:8px">No private decks loaded yet.</p>'}
+  <p class="status" id="dmsg"></p></section>`;
 }
 let STC="b";
 function vSmall(){
@@ -595,6 +612,7 @@ document.addEventListener("click",e=>{
   const j=e.target.closest("a[data-jump]");if(j){e.preventDefault();const s=document.getElementById(j.dataset.jump);if(s)s.scrollIntoView({behavior:"smooth"});return}
   const t=e.target.closest("button,input");if(!t)return;
   if(t.dataset.ctx){STC=t.dataset.ctx;route();return}
+  if(t.dataset.rmdeck){const id=t.dataset.rmdeck;try{localStorage.setItem(PRIV,JSON.stringify({decks:loadPriv().filter(d=>d.id!==id)}))}catch(x){}setDecks();route();return}
   if(t.id==="exp"){const code="SC1."+btoa(unescape(encodeURIComponent(JSON.stringify(S))));const a=$("#pcode");a.value=code;a.select();
     const ok=()=>{$("#pmsg").textContent="Code copied. Paste it into the app on your other device."};
     try{navigator.clipboard.writeText(code).then(ok,()=>{$("#pmsg").textContent="Code selected — copy it from the box."})}catch(x){$("#pmsg").textContent="Code selected — copy it from the box."}return}
@@ -614,6 +632,20 @@ document.addEventListener("click",e=>{
   if(t.dataset.q){const k=PF.deck+":"+PF.qi;if(t.dataset.q==="yes")S.known[k]=1;else delete S.known[k];persist();PF.qi=null;PF.show=false;route();return}
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){PF.q=e.target.value;const pos=e.target.selectionStart;route();const q=$("#q");q.focus();q.setSelectionRange(pos,pos)}});
+document.addEventListener("change",e=>{
+  if(e.target.id!=="deckfile"||!e.target.files||!e.target.files[0])return;
+  const f=e.target.files[0],rd=new FileReader();
+  rd.onload=()=>{let msg;
+    try{const o=JSON.parse(rd.result);const list=(o&&Array.isArray(o.decks)?o.decks:[]).filter(d=>d&&d.id&&Array.isArray(d.items)).map(cleanDeck).filter(d=>d.id&&d.items.length);
+      if(!list.length)throw 0;
+      const keep=loadPriv().filter(d=>!list.some(n=>n.id===d.id));
+      localStorage.setItem(PRIV,JSON.stringify({decks:keep.concat(list)}));setDecks();
+      if(!DK[PF.deck])PF.deck=DECKS[0].id;
+      msg="Loaded "+list.length+" deck"+(list.length>1?"s":"")+" with "+list.reduce((a,d)=>a+d.items.length,0)+" items ✓";}
+    catch(x){msg=x&&x.name==="QuotaExceededError"?"Not enough browser storage for this file.":"That file isn't a Speak Clearly deck file."}
+    route();const m=$("#dmsg");if(m)m.textContent=msg;const sec=$("#private");if(sec)sec.scrollIntoView();};
+  rd.readAsText(f);
+});
 addEventListener("hashchange",route);
 route();
 
